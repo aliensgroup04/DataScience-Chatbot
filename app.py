@@ -1,28 +1,34 @@
 import streamlit as st
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.messages import SystemMessage
 from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser
 from langchain.memory import ConversationBufferMemory
 from langchain_core.runnables import RunnableLambda
 
+# Streamlit Page Configuration
+st.set_page_config(page_title="🤖 Data Science Chatbot", layout="wide")
+st.title("Suman Data Science AI Chatbot")
+st.subheader("Ask your doubts here")
+
+# Initialize Chat Memory in Session State
+if "memory" not in st.session_state:
+    st.session_state.memory = ConversationBufferMemory(return_messages=True)
+google_api_key="AIzaSyCBhbuJbxjlghoZ3X1HQhS_qwuMpSE1wC0"
+
 # Initialize AI Model
 chat_model = ChatGoogleGenerativeAI(
-    google_api_key="AIzaSyCBhbuJbxjlghoZ3X1HQhS_qwuMpSE1wC0",
+    google_api_key=st.secrets["google_api_key"],  # Secure API Key Storage
     model="gemini-1.5-pro",
     temperature=1
 )
 
-# Define Chat Template
+# Define Chat Prompt Template
 chat_template = ChatPromptTemplate(
     messages=[
         ("system", "👨‍🏫 You are an AI Data Science Tutor. "
                    "You must answer ONLY Data Science-related questions. "
-                   "If the user asks non-data science questions, politely refuse and redirect them to relevant topics. "
-                   "Provide detailed technical explanations in simple terms. "
-                   "When relevant, include code snippets and AI-generated images to enhance understanding. "
-                   "Ensure that all code is clean, efficient, and uses best practices. "
-                   "For coding questions, always include proper syntax, explanations, and example outputs. "
+                   "If the user asks non-data science questions, politely refuse and redirect them. "
+                   "Provide detailed explanations with examples and clean code snippets. "
                    "For visualization-related topics, generate appropriate images using AI."),
         MessagesPlaceholder(variable_name="chat_history"),
         HumanMessagePromptTemplate.from_template("{human_input}"),
@@ -30,16 +36,13 @@ chat_template = ChatPromptTemplate(
 )
 
 output_parser = StrOutputParser()
-memory = ConversationBufferMemory(return_messages=True)
 
+# Function to retrieve chat history and user input
 def get_history_and_input(user_input):
     return {
-        "chat_history": memory.chat_memory.messages,
+        "chat_history": st.session_state.memory.chat_memory.messages,
         "human_input": user_input
     }
-
-def get_history(_=None):
-    return {"chat_history": memory.chat_memory.messages}
 
 chain = (
     RunnableLambda(lambda x: get_history_and_input(x["human_input"]))
@@ -48,39 +51,26 @@ chain = (
     | output_parser
 )
 
-# Streamlit UI
-st.set_page_config(page_title="🤖 Data Science Chatbot", layout="wide")
-
-st.title("Suman Data Science AI Chatbot")
-st.subheader("Ask your doubts here")
-
-
-# Chat History UI
-if "messages" not in st.session_state:
-    st.session_state["messages"] = []
-
-for message in st.session_state["messages"]:
-    role, content = message
-    if role == "user":
-        st.markdown(f"👤 **You:** {content}")
-    else:
-        st.markdown(f"🤖 **AI:** {content}")
+# Display Chat Messages
+for message in st.session_state.memory.chat_memory.messages:
+    role = "user" if message.type == "human" else "assistant"
+    with st.chat_message(role):
+        st.markdown(message.content)
 
 # User Input
-user_input = st.text_input("💬 Write ✍🏻 your Message:", key="user_input")
+if user_input := st.chat_input("💬 Write your Message:"):
+    # Display User Message
+    with st.chat_message("user"):
+        st.markdown(user_input)
 
-if st.button("Enter") and user_input:
-    # Display user message
-    st.session_state["messages"].append(("user", user_input))
-
-    # Get AI response
+    # Get AI Response
     query = {"human_input": user_input}
     response = chain.invoke(query)
 
-    # Display AI response
-    st.session_state["messages"].append(("ai", response))
-    st.markdown(f"🤖 **AI:** {response}")
+    # Display AI Response
+    with st.chat_message("assistant"):
+        st.markdown(response)
 
-    # Save to memory
-    memory.chat_memory.add_user_message(user_input)
-    memory.chat_memory.add_ai_message(response)
+    # Save Conversation History
+    st.session_state.memory.chat_memory.add_user_message(user_input)
+    st.session_state.memory.chat_memory.add_ai_message(response)
