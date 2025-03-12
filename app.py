@@ -4,7 +4,6 @@ from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplat
 from langchain_core.output_parsers import StrOutputParser
 from langchain.memory import ConversationBufferMemory
 from langchain_core.runnables import RunnableLambda
-import os
 
 # Streamlit Page Configuration
 st.set_page_config(page_title="🤖 Data Science Chatbot", layout="wide")
@@ -17,12 +16,12 @@ if "memory" not in st.session_state:
 
 # Initialize AI Model
 chat_model = ChatGoogleGenerativeAI(
-    google_api_key="AIzaSyCBhbuJbxjlghoZ3X1HQhS_qwuMpSE1wC0",  # Use st.secrets or environment variables in production
+    google_api_key="AIzaSyCBhbuJbxjlghoZ3X1HQhS_qwuMpSE1wC0",  # Securely store your API key
     model="gemini-1.5-pro",
     temperature=1
 )
 
-# Define Chat Prompt Template with Correct History
+# Define Chat Prompt Template
 chat_template = ChatPromptTemplate(
     messages=[
         ("system", "👨‍🏫 You are an AI Data Science Tutor. "
@@ -30,7 +29,7 @@ chat_template = ChatPromptTemplate(
                    "If the user asks non-data science questions, politely refuse and redirect them. "
                    "Provide detailed explanations with examples and clean code snippets. "
                    "For visualization-related topics, generate appropriate images using AI."),
-        MessagesPlaceholder(variable_name="chat_history"),  # Ensure past messages are passed
+        MessagesPlaceholder(variable_name="chat_history"),  # Fetch past messages
         HumanMessagePromptTemplate.from_template("{human_input}"),
     ]
 )
@@ -40,7 +39,7 @@ output_parser = StrOutputParser()
 # Function to retrieve chat history and user input
 def get_history_and_input(user_input):
     return {
-        "chat_history": st.session_state.memory.load_memory_variables({})["chat_history"],  # Ensure history is loaded
+        "chat_history": st.session_state.memory.chat_memory.messages,  # Fetch messages correctly
         "human_input": user_input
     }
 
@@ -51,7 +50,7 @@ chain = (
     | output_parser
 )
 
-# Display Chat Messages from Memory
+# Display Chat Messages
 for message in st.session_state.memory.chat_memory.messages:
     role = "user" if message.type == "human" else "assistant"
     with st.chat_message(role):
@@ -63,7 +62,7 @@ if user_input := st.chat_input("💬 Write your Message:"):
     with st.chat_message("user"):
         st.markdown(user_input)
 
-    # Get AI Response with History
+    # Get AI Response
     query = {"human_input": user_input}
     response = chain.invoke(query)
 
