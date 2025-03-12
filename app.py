@@ -17,12 +17,12 @@ if "memory" not in st.session_state:
 
 # Initialize AI Model
 chat_model = ChatGoogleGenerativeAI(
-    google_api_key="AIzaSyCBhbuJbxjlghoZ3X1HQhS_qwuMpSE1wC0",  # Replace with a secure method
+    google_api_key="your_google_api_key",  # Use st.secrets or environment variables in production
     model="gemini-1.5-pro",
     temperature=1
 )
 
-# Define Chat Prompt Template
+# Define Chat Prompt Template with Correct History
 chat_template = ChatPromptTemplate(
     messages=[
         ("system", "👨‍🏫 You are an AI Data Science Tutor. "
@@ -30,7 +30,7 @@ chat_template = ChatPromptTemplate(
                    "If the user asks non-data science questions, politely refuse and redirect them. "
                    "Provide detailed explanations with examples and clean code snippets. "
                    "For visualization-related topics, generate appropriate images using AI."),
-        MessagesPlaceholder(variable_name="chat_history"),  # Correctly retrieves past messages
+        MessagesPlaceholder(variable_name="chat_history"),  # Ensure past messages are passed
         HumanMessagePromptTemplate.from_template("{human_input}"),
     ]
 )
@@ -40,7 +40,7 @@ output_parser = StrOutputParser()
 # Function to retrieve chat history and user input
 def get_history_and_input(user_input):
     return {
-        "chat_history": st.session_state.memory.chat_memory.messages,  # Fetch previous messages
+        "chat_history": st.session_state.memory.load_memory_variables({})["chat_history"],  # Ensure history is loaded
         "human_input": user_input
     }
 
@@ -51,7 +51,7 @@ chain = (
     | output_parser
 )
 
-# Display Chat Messages
+# Display Chat Messages from Memory
 for message in st.session_state.memory.chat_memory.messages:
     role = "user" if message.type == "human" else "assistant"
     with st.chat_message(role):
@@ -63,7 +63,7 @@ if user_input := st.chat_input("💬 Write your Message:"):
     with st.chat_message("user"):
         st.markdown(user_input)
 
-    # Get AI Response
+    # Get AI Response with History
     query = {"human_input": user_input}
     response = chain.invoke(query)
 
