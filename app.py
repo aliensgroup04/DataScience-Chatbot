@@ -17,7 +17,7 @@ if "memory" not in st.session_state:
 
 # Initialize AI Model
 chat_model = ChatGoogleGenerativeAI(
-    google_api_key="your_google_api_key",  # Use st.secrets or environment variables in production
+    google_api_key="AIzaSyCBhbuJbxjlghoZ3X1HQhS_qwuMpSE1wC0",  # Use st.secrets or environment variables in production
     model="gemini-1.5-pro",
     temperature=1
 )
