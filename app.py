@@ -14,7 +14,7 @@ st.subheader("Ask your doubts here")
 if "memory" not in st.session_state:
     st.session_state.memory = ConversationBufferMemory(return_messages=True)
 
-google_api_key = os.getenv("GOOGLE_API_KEY", ""AIzaSyCBhbuJbxjlghoZ3X1HQhS_qwuMpSE1wC0"")
+google_api_key = os.getenv("GOOGLE_API_KEY", "AIzaSyCBhbuJbxjlghoZ3X1HQhS_qwuMpSE1wC0")
 
 
 # Initialize AI Model
