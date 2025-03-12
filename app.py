@@ -4,6 +4,7 @@ from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplat
 from langchain_core.output_parsers import StrOutputParser
 from langchain.memory import ConversationBufferMemory
 from langchain_core.runnables import RunnableLambda
+import os
 
 # Streamlit Page Configuration
 st.set_page_config(page_title="🤖 Data Science Chatbot", layout="wide")
