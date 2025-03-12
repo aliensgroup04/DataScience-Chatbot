@@ -16,7 +16,7 @@ if "memory" not in st.session_state:
 
 # Initialize AI Model
 chat_model = ChatGoogleGenerativeAI(
-    google_api_key="AIzaSyCBhbuJbxjlghoZ3X1HQhS_qwuMpSE1wC0",  # Securely store your API key
+    google_api_key="AIzaSyCBhbuJbxjlghoZ3X1HQhS_qwuMpSE1wC0",
     model="gemini-1.5-pro",
     temperature=1
 )
